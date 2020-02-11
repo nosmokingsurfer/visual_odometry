@@ -30,7 +30,15 @@ class Camera
 
     cv::Size Camera::getImageSize(void) const;
 
-    opengv::bearingVectors_t Camera::getBearings(const std::vector<cv::KeyPoint>& kPts, const double& dist = 1.0) const;
+    opengv::bearingVectors_t Camera::getBearings(const std::vector<cv::KeyPoint>& kPts, const double dist = 1.0) const;
+    opengv::bearingVectors_t Camera::getBearings(const std::vector<cv::Point2f>& pts, const double dist = 1.0) const;
+
+    const cv::Mat getProjection(void) const;
+    const cv::Mat getDistortion(void) const;
+
+    Camera getUndistortedCamera() const;
+
+    bool setCamParams(const cv::Mat& projection, const cv::Mat& distortion, const cv::Size& sz);
 
   private:
     cv::Size imgSize;

@@ -1,5 +1,6 @@
 #include <camera.h>
-
+#include <iostream>
+#include <opencv2/imgproc.hpp>
 
 Camera::Camera()
 {
@@ -51,7 +52,19 @@ Eigen::Vector3d Camera::reprojectWithDist(const cv::Point& pt, const double& dis
 }
 
 
-opengv::bearingVectors_t Camera::getBearings(const std::vector<cv::KeyPoint>& kPts, const double& dist) const
+opengv::bearingVectors_t Camera::getBearings(const std::vector<cv::Point2f>& pts, const double dist) const
+{
+  opengv::bearingVectors_t result(pts.size());
+
+  for(const auto&pt : pts)
+  {
+    result.push_back(reprojectWithDist(pt, dist));
+  }
+
+  return result;
+}
+
+opengv::bearingVectors_t Camera::getBearings(const std::vector<cv::KeyPoint>& kPts, const double dist) const
 {
   opengv::bearingVectors_t result(kPts.size());
 
@@ -66,4 +79,43 @@ opengv::bearingVectors_t Camera::getBearings(const std::vector<cv::KeyPoint>& kP
 cv::Size Camera::getImageSize(void) const
 {
   return this->imgSize;
+}
+
+const cv::Mat Camera::getProjection() const
+{
+  return this->projection;
+}
+
+const cv::Mat Camera::getDistortion() const
+{
+  return this->distortion;
+}
+
+bool Camera::setCamParams(const cv::Mat& projection_, const cv::Mat& distortion_, const cv::Size& sz_)
+{
+  this->projection = projection_;
+  this->distortion = distortion_;
+  this->imgSize = sz_;
+
+  return true;
+}
+
+Camera Camera::getUndistortedCamera() const
+{
+  Camera result;
+
+  cv::Mat src(this->imgSize, CV_32F);
+  cv::Mat dst(this->imgSize, CV_32F);
+
+  cv::Mat new_projection = projection;
+  cv::Mat new_distortion = distortion;
+
+  cv::undistort(src, dst, projection, distortion, new_projection);
+
+  new_distortion = distortion;
+  new_distortion.setTo(0);
+
+  result.setCamParams(new_projection, new_distortion, this->imgSize);
+  
+  return result;
 }
