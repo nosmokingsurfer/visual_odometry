@@ -2,6 +2,7 @@
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/xfeatures2d.hpp>
+#include <opencv2/calib3d.hpp>
 #include <opencv2/imgproc.hpp>
 
 #include <opengv/relative_pose/methods.hpp>
@@ -10,14 +11,16 @@
 #include <iostream>
 
 
-Odometer::Odometer(const Odometer::KEYPOINTS& keyPointType, const MATCHERS& matcherType, const double scale)
-: keyPointsType_(keyPointType)
-, imageScale_(scale)
-, matcherType_(matcherType)
-{};
+template<typename keypoint, cv::DescriptorMatcher::MatcherType type>
+Odometer<keypoint, type>::Odometer(const double scale):
+  imageScale_(scale)
+{
+  this->keypointDetector_ = keypoint::create();
+  this->matcher_ = cv::DescriptorMatcher::create(type);
+}
 
- 
- opengv::bearingVectors_t Odometer::extractBearings(const std::vector<cv::KeyPoint>& keyPoints)
+template<typename keypoint, cv::DescriptorMatcher::MatcherType matcher>
+ opengv::bearingVectors_t Odometer<keypoint, matcher>::extractBearings(const std::vector<cv::KeyPoint>& keyPoints)
 {
   //undistorting keyPoints
   std::vector<cv::Point2f> src(keyPoints.size());
@@ -38,45 +41,24 @@ Odometer::Odometer(const Odometer::KEYPOINTS& keyPointType, const MATCHERS& matc
   return bearings;
 }
 
- bool Odometer::initCam(const std::string& calibFile)
+ template<typename keypoint, cv::DescriptorMatcher::MatcherType matcher>
+ bool Odometer<keypoint, matcher>::initCam(const std::string& calibFile)
  {
   bool res = this->cam_.read(calibFile);
   res &= cam_.resizeCamera(this->imageScale_);
   return res;
  }
 
-
- bool Odometer::init()
+ template<typename keypoint, cv::DescriptorMatcher::MatcherType matcher>
+ bool Odometer<keypoint, matcher>::init()
  {
-  switch(keyPointsType_)
-  {
-    case(KEYPOINTS::SURF):
-    {
-      surfDetector_ = cv::xfeatures2d::SURF::create(100);
-      break;
-    }
-
-    case(KEYPOINTS::SIFT):
-    {
-      break;
-    }
-  }
-
-  switch(matcherType_)
-  {
-    case(MATCHERS::FLANNBASED):
-    {
-      matcher_ = cv::DescriptorMatcher::create(cv::DescriptorMatcher::FLANNBASED);
-      break;
-    }
-  }
 
   initialized = true;
   return true;
  }
 
-
- bool Odometer::process(const cv::Mat& newImg)
+ template<typename keypoint, cv::DescriptorMatcher::MatcherType matcher>
+ bool Odometer<keypoint, matcher>::process(const cv::Mat& newImg)
  {
   //processing new image
   cv::Mat resized_img;
@@ -86,14 +68,9 @@ Odometer::Odometer(const Odometer::KEYPOINTS& keyPointType, const MATCHERS& matc
   std::vector<cv::KeyPoint> newKeyPoints;
   cv::Mat newDescriptors;
 
-  switch (this->keyPointsType_)
-  {
-    case(KEYPOINTS::SURF):
-    {
-      this->surfDetector_->detectAndCompute(resized_img, cv::noArray(), newKeyPoints, newDescriptors);
-      break;
-    }
-  };
+  
+  this->keypointDetector_->detectAndCompute(resized_img, cv::noArray(), newKeyPoints, newDescriptors);
+  
 
   auto newBearings = extractBearings(newKeyPoints);
 
@@ -136,7 +113,7 @@ Odometer::Odometer(const Odometer::KEYPOINTS& keyPointType, const MATCHERS& matc
   //estimating transition and rotation
 
   opengv::relative_pose::CentralRelativeAdapter adapter(prevBearingVectors_, newBearings);  
-  auto result = opengv::relative_pose::optimize_nonlinear(adapter);
+  auto result = opengv::relative_pose::optimize_nonlinear(adapter, indices);
 
   std::cout << result << std::endl;
 
@@ -149,3 +126,7 @@ Odometer::Odometer(const Odometer::KEYPOINTS& keyPointType, const MATCHERS& matc
   cv::waitKey(50);
   return true;
  }
+
+ template Odometer<cv::xfeatures2d::SIFT, cv::DescriptorMatcher::FLANNBASED>;
+ template Odometer<cv::ORB, cv::DescriptorMatcher::BRUTEFORCE>;
+ template Odometer<cv::ORB, cv::DescriptorMatcher::FLANNBASED>;

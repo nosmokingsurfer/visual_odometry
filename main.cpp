@@ -1,29 +1,26 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include <pcl/visualization/pcl_visualizer.h>
-#include <pcl/common/common.h>
-
 #include <camera.h>
-
 #include <odometer.h>
-
 #include <helpers.h>
-
-using namespace cv;
-using namespace cv::xfeatures2d;
+#include <iostream>
 
 
-void main()
+void main(int argc, char** argv)
 {
 
-  Odometer odo(Odometer::KEYPOINTS::SURF, Odometer::MATCHERS::FLANNBASED, 0.125);
+  std::cout << argv[0] << std::endl;
+
+  std::string calibDir = std::string(argv[0]) + "/../../../";
+  std::string datasetDir = std::string(argv[0]) + "/../../../";
+
+  Odometer<cv::ORB, cv::DescriptorMatcher::FLANNBASED> odo(0.125);
   odo.init();
-
-  odo.initCam("E:/visual/calib.yml");
-
-  std::vector<std::string> files = load_test_2();
+  odo.initCam(calibDir + "calib.yml");
   
+
+  std::vector<std::string> files = load_test(datasetDir + "/test_2");
   
   for(const auto& f : files)
   {

@@ -8,31 +8,22 @@
 #ifndef ODOMETER_H__2019
 #define ODOMETER_H__2019
 
-
 #include <camera.h>
 #include <opengv/types.hpp>
 #include <opencv2/xfeatures2d.hpp>
 
-
 //! @brief Class to work with visal and IMU odometry.
+template<typename keypoint, cv::DescriptorMatcher::MatcherType>
 class Odometer
 {
   public:
-    enum class KEYPOINTS
-    {
-      SURF,
-      SIFT,
-      ORB
-    };
 
-    enum class MATCHERS
-    {
-      FLANNBASED,
-      BRUTEFORCE,
-      BRUTEFORCE_L1
-    };
+    Odometer() = delete;
 
-    Odometer(const KEYPOINTS& keyPointType, const MATCHERS& matcherType, const double scale);
+    //Odometer(const KEYPOINTS& keyPointType, const MATCHERS& matcherType, const double scale);
+
+    Odometer(const double scale);
+
 
     bool init();
 
@@ -44,19 +35,26 @@ class Odometer
     opengv::bearingVectors_t extractBearings(const std::vector<cv::KeyPoint>& keyPoints);
 
     bool initCam(const std::string& calibFile);
+
   private:
+    
     Camera cam_; //!< Store camera properies and model.
     cv::Mat prevImage_; //!< Prevous image.
     std::vector<cv::KeyPoint> prevKeyPoints_; //!< Previous set of key points.
     cv::Mat prevDescriptors_; //!< Previous set of descriptors.
     opengv::bearingVectors_t prevBearingVectors_; //!M Previous bearing vectors.
-    KEYPOINTS keyPointsType_; //!< Type of key points used in visual odometry.
-    MATCHERS matcherType_; //!< Type of key point matcher.
+//    KEYPOINTS keyPointsType_; //!< Type of key points used in visual odometry.
+//    MATCHERS matcherType_; //!< Type of key point matcher.
     double imageScale_; //!< Image scale for processing.
     bool initialized = false; //!< If Odometer was initialized or not.
 
-    //key point detectors
-    cv::Ptr<cv::xfeatures2d::SURF> surfDetector_; //!< Instance for SURF detector.
+    ////key point detectors //!< @todo is there any way to combine all possible types of keypoints and matchers in some templates?
+    //cv::Ptr<cv::xfeatures2d::SURF> surfDetector_; //!< Instance for SURF detector.
+    //cv::Ptr<cv::xfeatures2d::SIFT> siftDetector_; //!< Instance for SIFT detector.
+    //cv::Ptr<cv::xfeatures2d::FREAK> freakDetector_;
+
+
+    cv::Ptr<keypoint> keypointDetector_;
 
     //key point matchers
     cv::Ptr<cv::DescriptorMatcher> matcher_; //!< Instance for key point matcher.

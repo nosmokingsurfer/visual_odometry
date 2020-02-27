@@ -1,6 +1,7 @@
 #include <camera.h>
 #include <iostream>
-#include <opencv2/imgproc.hpp>
+#include <opencv2/calib3d.hpp>
+
 
 Camera::Camera()
 {
@@ -12,14 +13,15 @@ bool Camera::read(const std::string& fileName)
   cv::FileStorage fs;
   fs.open(fileName, cv::FileStorage::Mode::READ);
 
-  if(fs.isOpened())
+  if (fs.isOpened())
   {
     fs["K"] >> this->projection;
     fs["D"] >> this->distortion;
     fs["imageSize"] >> this->imgSize;
+    return true;
   }
-
-  return true;
+  else
+    return false;
 }
 
 bool Camera::resizeCamera(const double scale)
