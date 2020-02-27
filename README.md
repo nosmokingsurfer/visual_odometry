@@ -1,5 +1,3 @@
-![C/C++ CI](https://github.com/nosmokingsurfer/visual_odometry/workflows/C/C++%20CI/badge.svg)
-
 # visual_odometry
 
 Simple test project to play around with visual odometry methods from OpenGV library.
