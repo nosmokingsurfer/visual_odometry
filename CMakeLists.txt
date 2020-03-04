@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(visual_odometry)
 
+
+
 FIND_PACKAGE(OpenCV 4.2.0 REQUIRED)
 find_package(OpenGV REQUIRED)
 
@@ -20,3 +22,5 @@ set(visual_SOURCE
 add_executable(visual_odometry ${visual_HEADERS} ${visual_SOURCE})
     
 target_link_libraries(visual_odometry opengv ${OpenCV_LIBS})
+
+set_target_properties(visual_odometry PROPERTIES CXX_STANDARD 17)

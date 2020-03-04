@@ -58,9 +58,9 @@ opengv::bearingVectors_t Camera::getBearings(const std::vector<cv::Point2f>& pts
 {
   opengv::bearingVectors_t result(pts.size());
 
-  for(const auto&pt : pts)
+  for(auto i = 0; i < pts.size(); i++) 
   {
-    result.push_back(reprojectWithDist(pt, dist));
+    result[i] = reprojectWithDist(pts[i], dist);
   }
 
   return result;

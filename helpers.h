@@ -17,7 +17,6 @@ std::vector<std::string> load_test(const std::string& path)
 
   for (const auto& f : fs::directory_iterator(path))
   {
-    std::cout << f.path() << std::endl;
     result.push_back(f.path().string());
   }
 
